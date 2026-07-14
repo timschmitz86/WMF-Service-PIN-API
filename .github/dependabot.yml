@@ -1,6 +1,14 @@
 version: 2
 
 updates:
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      
   # Backend (npm)
   - package-ecosystem: "npm"
     directory: "/"
