@@ -10,8 +10,8 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-const getTimezoneDate = () => {
-  const dateStr = new Date().toLocaleString('de-DE', {
+const getTimezoneParts = () => {
+  const parts = new Intl.DateTimeFormat('de-DE', {
     timeZone: TIMEZONE,
     year: 'numeric',
     month: '2-digit',
@@ -20,20 +20,25 @@ const getTimezoneDate = () => {
     minute: '2-digit',
     second: '2-digit',
     hour12: false
-  });
-  return new Date(dateStr);
+  }).formatToParts(new Date());
+
+  const map = {};
+  for (const p of parts) {
+    if (p.type !== 'literal') map[p.type] = p.value;
+  }
+  return map; // { year, month, day, hour, minute, second }
 };
 
 const calculateServicePin = () => {
-  const now = getTimezoneDate();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  
+  const parts = getTimezoneParts();
+  const month = parts.month || '00';
+  const day = parts.day || '00';
+  const hours = parts.hour || '00';
+
   const reversedMonth = month.split('').reverse().join('');
   const reversedDay = day.split('').reverse().join('');
   const reversedHours = hours.split('').reverse().join('');
-  
+
   return reversedMonth + reversedDay + reversedHours;
 };
 
