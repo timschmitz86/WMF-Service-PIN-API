@@ -32,7 +32,12 @@ if (allowedOrigins.length > 0) {
 
 app.use(cors(corsOptions));
 // Preflight handling for all routes
-app.options('/*', cors(corsOptions));
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return cors(corsOptions)(req, res, next);
+  }
+  next();
+});
 app.use(express.json());
 
 const getTimezoneParts = () => {
