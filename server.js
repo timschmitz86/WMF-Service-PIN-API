@@ -1,13 +1,38 @@
 const express = require('express');
 const cors = require('cors');
 
+// Configure timezone
 const DEFAULT_TIMEZONE = 'Europe/Berlin';
 const TIMEZONE = process.env.TIMEZONE || DEFAULT_TIMEZONE;
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// CORS configuration: read allowed origins from env var
+// Example: CORS_ALLOWED_ORIGINS=https://wmf.home-ts.com,https://api.wmf.home-ts.com,http://localhost:3000
+const rawAllowed = process.env.CORS_ALLOWED_ORIGINS || '';
+const allowedOrigins = rawAllowed.split(',').map(s => s.trim()).filter(Boolean);
+const allowCredentials = (process.env.CORS_ALLOW_CREDENTIALS || 'false').toLowerCase() === 'true';
+
+let corsOptions;
+if (allowedOrigins.length > 0) {
+  corsOptions = {
+    origin: (origin, callback) => {
+      // Allow non-browser tools / same-origin requests without Origin header
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: allowCredentials
+  };
+} else {
+  // Default to allowing any origin (legacy behavior)
+  corsOptions = { origin: true, credentials: allowCredentials };
+}
+
+app.use(cors(corsOptions));
+// Preflight handling for all routes
+app.options('*', cors(corsOptions));
 app.use(express.json());
 
 const getTimezoneParts = () => {
